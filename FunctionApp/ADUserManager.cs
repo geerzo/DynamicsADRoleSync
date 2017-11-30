@@ -14,7 +14,7 @@ namespace DynamicsADRoleSync.FunctionApp
 
         public ADUserManager()
         {
-            client = new GraphServiceClient("https://graph.windows.net/ee2a9609-33b7-4aca-8608-0fd911ff0924", new DelegateAuthenticationProvider(
+            client = new GraphServiceClient("https://graph.windows.net/" + Settings.Get("Tenant"), new DelegateAuthenticationProvider(
                 async (requestMessage) =>
                 {
                     string accessToken = await TokenManager.GetBearerTokenAsync(apiUrl);
