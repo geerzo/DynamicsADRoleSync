@@ -30,7 +30,7 @@ namespace DynamicsADRoleSync.FunctionApp
                 {
                     if (regex.IsMatch(group))
                     {
-                        var dynRole = regex.Replace(group, "");
+                        var dynRole = regex.Replace(group, "").Trim();
                         roles.Add(dynRole);
                         uniqueRoles.Add(dynRole);
                     }
