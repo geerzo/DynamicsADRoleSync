@@ -3,6 +3,7 @@
     <TargetFramework>net47</TargetFramework>
     <AssemblyName>DynamicsADRoleSync.FunctionApp</AssemblyName>
     <RootNamespace>DynamicsADRoleSync.FunctionApp</RootNamespace>
+    <Version>0.1.0</Version>
   </PropertyGroup>
   <ItemGroup>    
     <PackageReference Include="Microsoft.Graph" Version="1.6.2" />    
