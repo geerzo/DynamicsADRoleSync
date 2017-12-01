@@ -1,5 +1,9 @@
+**NOTE** - This project follows the Git Flow methodology, so the develop branch is active develop and the master branch is released code, tagged with versions.
+
 # Overview
 This project is designed to allow organizations to be able to use Azure Active Directory groups to manage what roles a user is assigned to in Dynamics 365 Customer Engagement. Since there is no native integration this is implemented as a one-way sync between AD and Dynamics on a timer.
+
+For the time being this project is more of a proof of concept vs production ready code.
 
 # Setup
 This will describe the steps required to deploy this project to your organization. The function uses Server-to-Server authentication vs username/password authentication which requires some of the additional setup tasks.

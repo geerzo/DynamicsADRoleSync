@@ -47,20 +47,20 @@ namespace DynamicsADRoleSync.FunctionApp
 
         public User[] GetProvisionedUsers(string type)
         {
-            var licensedUsers = new List<User>();
+            var provisionedUsers = new List<User>();
             foreach (var user in GetUsers())
             {
                 foreach (var system in user.ProvisionedPlans)
                 {
                     if (system.Service.Equals(type) && system.CapabilityStatus.Equals("Enabled"))
                     {
-                        licensedUsers.Add(user);
+                        provisionedUsers.Add(user);
                         break;
                     }
                 }
             }
 
-            return licensedUsers.ToArray();
+            return provisionedUsers.ToArray();
         }
     }
 }
