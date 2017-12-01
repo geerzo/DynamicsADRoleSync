@@ -12,7 +12,7 @@ namespace DynamicsADRoleSync.FunctionApp
         [FunctionName("ADRoleSyncTimer")]
         public static void Run([TimerTrigger("0 */1 * * * *")]TimerInfo myTimer, TraceWriter log)
         {
-            var userRoles = new Dictionary<string, string[]>();
+            var userRoles = new Dictionary<string, List<string>>();
             var uniqueRoles = new HashSet<string>();
 
             ADUserManager adUserMgr = new ADUserManager();
@@ -37,15 +37,49 @@ namespace DynamicsADRoleSync.FunctionApp
                 }
                 if (roles.Count > 0)
                 {
-                    var dynUserID = dynMgr.GetUserID(user.UserPrincipalName);
-                    userRoles.Add(dynUserID, roles.ToArray());
-                    log.Info(user.DisplayName + ": " + string.Join(", ", userRoles[dynUserID]));
+                    userRoles.Add(user.UserPrincipalName, roles);
+                    log.Info(user.DisplayName + ": " + string.Join(", ", roles));
                 }
-
-                log.Info(user.DisplayName + ": No Dynamics Roles");
-
+                else
+                {
+                    log.Info(user.DisplayName + ": No Dynamics Roles");
+                }
             }
 
+            var dynRoles = dynMgr.GetRoles();
+
+            foreach (var username in userRoles.Keys)
+            {
+                var dynUser = dynMgr.GetUser(username);
+
+                var adRoles = userRoles[username];
+                var roleIDsToAdd = new List<string>();
+                foreach (var dynRole in dynUser.systemuserroles_association)
+                {
+                    if (adRoles.Contains(dynRole.name)) {
+                        adRoles.Remove(dynRole.name);
+                    }
+                }
+                foreach (var adRole in adRoles)
+                {
+                    foreach (var dynRole in dynRoles)
+                    {
+                        if (dynRole.name.Equals(adRole))
+                        {
+                            roleIDsToAdd.Add(dynRole.roleid);
+                            break;
+                        }
+                    }
+                }
+                if (roleIDsToAdd.Count > 0)
+                {
+                    log.Info(string.Format("Adding the following roles to {0}: {1}", username, string.Join(", ", adRoles)));
+                    dynMgr.AddRolesToUser(dynUser.systemuserid, roleIDsToAdd);
+                } else
+                {
+                    log.Info(string.Format("{0} already has all the appropriate roles", username));
+                }
+            }
         }
     }
 }

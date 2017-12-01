@@ -29,7 +29,7 @@ TBD
 TBD
 
 ### Provide admin consent to the requested permissions
-1. Navigate to this URL (fill in values) https://login.microsoftonline.com/<DynamicsTenant>/oauth2/authorize?client_id=<AppID>&redirect_uri=<RedirectURLFromAppRegistration>&response_type=code&prompt=admin_consent
+1. Navigate to this URL (fill in values) `https://login.microsoftonline.com/<DynamicsTenant>/oauth2/authorize?client_id=<AppID>&redirect_uri=<RedirectURLFromAppRegistration>&response_type=code&prompt=admin_consent`
 2. Login with an Admin Account
 3. Accept the permissions
 
