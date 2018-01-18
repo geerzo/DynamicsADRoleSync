@@ -4,6 +4,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Graph;
 using System.Text.RegularExpressions;
+using System.Net;
 
 namespace DynamicsADRoleSync.FunctionApp
 {
@@ -14,11 +15,12 @@ namespace DynamicsADRoleSync.FunctionApp
         {
             var userRoles = new Dictionary<string, List<string>>();
             var uniqueRoles = new HashSet<string>();
+            System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
             ADUserManager adUserMgr = new ADUserManager();
             log.Info($"Dynamics AD to Dynamics Role Sync function executed at: {DateTime.Now}");
 
-            var dynMgr = new DynamicsUserManager();
+            var dynMgr = new DynamicsUserManager(log);
 
             var provisionedUsers = adUserMgr.GetProvisionedUsers("CRM");
 
@@ -52,32 +54,44 @@ namespace DynamicsADRoleSync.FunctionApp
             {
                 var dynUser = dynMgr.GetUser(username);
 
-                var adRoles = userRoles[username];
-                var roleIDsToAdd = new List<string>();
-                foreach (var dynRole in dynUser.systemuserroles_association)
+                if (dynUser != null)
                 {
-                    if (adRoles.Contains(dynRole.name)) {
-                        adRoles.Remove(dynRole.name);
-                    }
-                }
-                foreach (var adRole in adRoles)
-                {
-                    foreach (var dynRole in dynRoles)
+                    var adRoles = userRoles[username];
+                    var roleIDsToAdd = new List<string>();
+                    if (dynUser.systemuserroles_association != null)
                     {
-                        if (dynRole.name.Equals(adRole))
+                        foreach (var dynRole in dynUser.systemuserroles_association)
                         {
-                            roleIDsToAdd.Add(dynRole.roleid);
-                            break;
+                            if (adRoles.Contains(dynRole.name))
+                            {
+                                adRoles.Remove(dynRole.name);
+                            }
                         }
                     }
+                    foreach (var adRole in adRoles)
+                    {
+                        foreach (var dynRole in dynRoles)
+                        {
+                            if (dynRole.name.Equals(adRole))
+                            {
+                                roleIDsToAdd.Add(dynRole.roleid);
+                                break;
+                            }
+                        }
+                    }
+                    if (roleIDsToAdd.Count > 0)
+                    {
+                        log.Info(string.Format("Adding the following roles to {0}: {1}", username, string.Join(", ", adRoles)));
+                        dynMgr.AddRolesToUser(dynUser.systemuserid, roleIDsToAdd);
+                    }
+                    else
+                    {
+                        log.Info(string.Format("{0} already has all the appropriate roles", username));
+                    }
                 }
-                if (roleIDsToAdd.Count > 0)
+                else
                 {
-                    log.Info(string.Format("Adding the following roles to {0}: {1}", username, string.Join(", ", adRoles)));
-                    dynMgr.AddRolesToUser(dynUser.systemuserid, roleIDsToAdd);
-                } else
-                {
-                    log.Info(string.Format("{0} already has all the appropriate roles", username));
+                    log.Info(string.Format("{0} is not a valid Dynamics user", username));
                 }
             }
         }
