@@ -13,9 +13,11 @@ namespace DynamicsADRoleSync.FunctionApp
     {
         private RestClient client = null;
         private string baseUrl = null;
+        private TraceWriter log = null;
 
-        public DynamicsUserManager()
+        public DynamicsUserManager(TraceWriter log)
         {
+            this.log = log;
             var resource = Settings.Get("DynamicsRootUrl");
             var token = TokenManager.GetBearerTokenAsync(resource).Result;
             baseUrl = resource + "/api/data/v9.0";
@@ -54,6 +56,10 @@ namespace DynamicsADRoleSync.FunctionApp
             {
                 return JsonConvert.DeserializeObject<DynUser>(resp.Content);
             }
+            else
+            {
+                log.Error(string.Format("Error getting the a user: {0}", resp.ErrorMessage));
+            }
 
             return null;
         }
@@ -68,9 +74,22 @@ namespace DynamicsADRoleSync.FunctionApp
             {
                 var json = JsonConvert.DeserializeObject<JObject>(resp.Content);
                 return json["value"].ToObject<List<DynRole>>();
+            } else
+            {
+                log.Error(string.Format("Error getting the role list {0}", resp.ErrorMessage));
+                //logException(resp.ErrorException);
             }
 
             return null;
+        }
+
+        private void logException(System.Exception ex)
+        {
+            log.Error(ex.Message, ex);
+            if (ex.InnerException != null)
+            {
+                logException(ex.InnerException);
+            }
         }
 
         public void AddRolesToUser(string userid, List<string> roleIDs)
